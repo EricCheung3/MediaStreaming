@@ -349,7 +349,7 @@ public class CommandService extends Service {
 	public String mUri;
 	private String mKeepalive;
 	/**
-	 * 上一次写时间
+	 * Last Write Time
 	 */
 	private long mLastWriteTime;
 
@@ -409,8 +409,8 @@ public class CommandService extends Service {
 //				final String ip = pref.getString(EasyCameraApp.KEY_SERVER_ADDRESS, "www.easydarwin.org");
 //				String port = pref.getString(EasyCameraApp.KEY_SERVER_PORT, "554");
 //				String id = pref.getString(EasyCameraApp.KEY_DEVICE_ID, Build.MODEL);
-				final String ip = pref.getString("key_server_address", "www.easydarwin.org");
-				String port = pref.getString("key_server_port", "554");
+				final String ip = pref.getString("key_server_address", "129.128.184.46");
+				String port = pref.getString("key_server_port", "8554");
 				String id = pref.getString("key_device_id", Build.MODEL);
 				
 				final InetAddress[] inetAddress = new InetAddress[1];

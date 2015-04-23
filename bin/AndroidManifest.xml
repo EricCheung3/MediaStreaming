@@ -40,7 +40,8 @@ android:theme="@style/FullscreenTheme"
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name="easydarwin.android.videostreaming.VideoStreamingActivity" />
+        <activity android:name="easydarwin.android.videostreaming.VideoStreamingActivity"
+            	android:configChanges="orientation|keyboardHidden" />
         <activity android:name="openfire.chat.activity.RegisterActivity" />
         <activity android:name="openfire.chat.activity.ChatMainActivity" />
         <activity

@@ -23,18 +23,18 @@ import android.widget.TextView;
 
 public class FriendsAdapter extends BaseAdapter {
 
-	private static XMPPConnection connection = null;
+//	private static XMPPConnection connection = null;
 	
 	private Activity context;
 	private List<Map<String,String>> listMap = new ArrayList<Map<String,String>>();
     private static HashMap<Integer,Boolean> isSelected = new HashMap<Integer,Boolean>();
     
-	public FriendsAdapter(String username,String passwd,Activity context, List<Map<String,String>> listMap){
+	public FriendsAdapter(Activity context, List<Map<String,String>> listMap){
 		this.context = context;
 		this.listMap = listMap;
-		getFriendsList(username,passwd);
+		//listMap = getFriendsList(username,passwd);
 	}
-	
+	/*
 	private List<Map<String,String>> getFriendsList(String username,String passwd){
 		try {
 			if (null == connection || !connection.isAuthenticated()) {
@@ -75,6 +75,7 @@ public class FriendsAdapter extends BaseAdapter {
 		}
 		return null;
 	}
+	*/
 	@Override
 	public int getCount() {
 		return listMap.size();

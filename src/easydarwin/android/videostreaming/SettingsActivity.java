@@ -1,11 +1,15 @@
 package easydarwin.android.videostreaming;
 
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.easydarwin.android.camera.R;
 
 import android.annotation.TargetApi;
 import android.content.Context;
+import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.res.Configuration;
 import android.media.Ringtone;
@@ -46,7 +50,7 @@ public class SettingsActivity extends PreferenceActivity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setupActionBar();
+		//setupActionBar();
 	}
 
 	/**
@@ -103,15 +107,33 @@ public class SettingsActivity extends PreferenceActivity {
 		// Add 'general' preferences.
 		addPreferencesFromResource(R.xml.pref_general);
 
+		final SharedPreferences settings = PreferenceManager
+				.getDefaultSharedPreferences(this);
+		final ListPreference videoResolution = (ListPreference) findPreference("video_resolution");
 		bindPreferenceSummaryToValue(findPreference("key_device_id"));
 		bindPreferenceSummaryToValue(findPreference("key_server_address"));
 		bindPreferenceSummaryToValue(findPreference("key_server_port"));
-		bindPreferenceSummaryToValue(findPreference("frame_rate"));
-		bindPreferenceSummaryToValue(findPreference("key_transport_list"));
-		bindPreferenceSummaryToValue(findPreference("bit_rate"));
+		bindPreferenceSummaryToValue(findPreference("video_framerate"));
+		bindPreferenceSummaryToValue(findPreference("video_camera"));
+		bindPreferenceSummaryToValue(findPreference("video_bitrate"));
 		bindPreferenceSummaryToValue(findPreference("video_resolution"));
+		bindPreferenceSummaryToValue(findPreference("key_transport_list"));
 
-
+		
+		videoResolution.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+			public boolean onPreferenceChange(Preference preference, Object newValue) {
+				Editor editor = settings.edit();
+				Pattern pattern = Pattern.compile("([0-9]+)x([0-9]+)");
+				Matcher matcher = pattern.matcher((String)newValue);
+				matcher.find();
+				editor.putInt("video_resX", Integer.parseInt(matcher.group(1)));
+				editor.putInt("video_resY", Integer.parseInt(matcher.group(2)));
+				editor.commit();
+				videoResolution.setSummary(getString(R.string.settings11)+" "+(String)newValue+"px");
+				return true;
+			}
+		});
+		
 		try {
 			findPreference("key_about").setTitle("Version：" + getPackageManager().getPackageInfo(getPackageName(), 0).versionName);
 		} catch (NameNotFoundException e) {
@@ -200,12 +222,14 @@ public class SettingsActivity extends PreferenceActivity {
 				preference.setSummary(stringValue);
 			}
 
-			if (preference.getKey().equals("frame_rate")) {
+			if (preference.getKey().equals("video_framerate")) {
 				int fr = Integer.parseInt(stringValue);
 				if (fr > 30) {
 					fr = 30;
-				} else if (fr < 5) {
-					fr = 5;
+				} else if (20 <= fr &&fr < 30) {
+					fr = 20;
+				}else if (fr < 20) {
+					fr = 15;
 				}
 				EditTextPreference ep = (EditTextPreference) preference;
 				ep.setText("" + fr);

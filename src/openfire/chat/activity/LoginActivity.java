@@ -11,6 +11,7 @@ import openfire.chat.service.UserService;
 import openfire.chat.service.UserServiceImpl;
 
 import org.easydarwin.android.camera.R;
+import org.jivesoftware.smack.Roster;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.packet.Presence;
 
@@ -221,11 +222,15 @@ public class LoginActivity extends Activity implements OnClickListener {
 //					Log.i("RosterEntry","getGroups: " + entry.getGroups().toString());
 //					Log.i("RosterEntry","getName: " + entry.getName());//user4
 //				}
-				Log.i("connection","getUser: " + connection.getUser());//user2@myria/Smack
+				//Log.i("connection","getUser: " + connection.getUser());//user2@myria/Smack
 
+				Roster roster = connection.getRoster();
+				String entries = roster.getEntries().toString();
+				Log.i("entries",entries);
 				Intent intent = new Intent();
 				intent.putExtra("username", username);
 				intent.putExtra("password", password);
+				intent.putExtra("entries", entries);
 				intent.setClass(LoginActivity.this, VideoStreamingActivity.class);
 				startActivity(intent);
 				LoginActivity.this.finish();

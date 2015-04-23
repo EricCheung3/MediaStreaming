@@ -52,7 +52,7 @@
             android:key="p_video_camera"
             android:title="@string/settings13" />
         <ListPreference
-            android:defaultValue="640x480"
+            android:defaultValue="320*240"
             android:entries="@array/videoResolutionArray"
             android:entryValues="@array/videoResolutionArray"
             android:key="video_resolution"
@@ -64,7 +64,7 @@
             android:key="video_framerate"
             android:title="@string/settings15" />
         <ListPreference
-            android:defaultValue="500"
+            android:defaultValue="300"
             android:entries="@array/videoBitrateArray"
             android:entryValues="@array/videoBitrateValues"
             android:key="video_bitrate"

@@ -3,6 +3,7 @@ package easydarwin.android.videostreaming;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -68,6 +69,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.content.res.Configuration;
 import android.graphics.drawable.BitmapDrawable;
 import android.net.ConnectivityManager;
@@ -77,6 +79,7 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.PowerManager;
 import android.preference.PreferenceManager;
 import android.support.v4.content.LocalBroadcastManager;
 import android.text.TextUtils;
@@ -99,15 +102,17 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 public class VideoStreamingActivity extends Activity implements Callback,
-		RtspClient.Callback, android.view.SurfaceHolder.Callback, OnClickListener {
+		RtspClient.Callback, android.view.SurfaceHolder.Callback,
+		OnClickListener {
 
 	private static final int REQUEST_SETTING = 1000;
 	// current system info msg
 	private static final int msgKey1 = 1;
+	private PowerManager.WakeLock wl;
 	private BroadcastReceiver mReceiver;
 	private String mAddress;
 	private String mPort;
-	private String mDeviceId;
+	private String mVideoName;
 	protected Session mSession;
 	protected RtspClient mClient;
 
@@ -129,12 +134,15 @@ public class VideoStreamingActivity extends Activity implements Callback,
 	private static SurfaceHolder surfaceHolder;
 	private SharedPreferences preferences;
 
-	Pattern pattern = Pattern.compile("([0-9]+)x([0-9]+)");
+	private Pattern pattern = Pattern.compile("([0-9]+)x([0-9]+)");
 	private String username;
 	private String password;
+	private String entries;
+	private List<Map<String, String>> friendList;
 	private boolean messageFlag = true;
 	private XMPPConnection connection;
-	
+	private String streaminglink = "http://129.128.184.46:8554/live.sdp";
+
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -143,25 +151,30 @@ public class VideoStreamingActivity extends Activity implements Callback,
 		configureProviderManager(ProviderManager.getInstance());
 		getWindow().setFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON,
 				WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-
-		SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(this);
+		wl = ((PowerManager) getSystemService(Context.POWER_SERVICE))
+				.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK,
+						"com.control.wakelock");
+		// SharedPreferences pref =
+		// PreferenceManager.getDefaultSharedPreferences(this);
 
 		preferences = PreferenceManager.getDefaultSharedPreferences(this);
 
-		ConnectivityManager cm = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
-		NetworkInfo info = cm.getActiveNetworkInfo();
-		if (info != null) {
-			if (info.getType() == ConnectivityManager.TYPE_WIFI) {
-				pref.edit().putString("bit_rate", "4").commit();
-			} else {
-				pref.edit().putString("bit_rate", "2").commit();
-			}
-		}
+		preferences.registerOnSharedPreferenceChangeListener(spcl);
+		// ConnectivityManager cm = (ConnectivityManager)
+		// getSystemService(CONNECTIVITY_SERVICE);
+		// NetworkInfo info = cm.getActiveNetworkInfo();
+		// if (info != null) {
+		// if (info.getType() == ConnectivityManager.TYPE_WIFI) {
+		// pref.edit().putString("bit_rate", "4").commit();
+		// } else {
+		// pref.edit().putString("bit_rate", "2").commit();
+		// }
+		// }
 
 		initView();
-		
+
 		boolean bParamInvalid = (TextUtils.isEmpty(mAddress)
-				|| TextUtils.isEmpty(mPort) || TextUtils.isEmpty(mDeviceId));
+				|| TextUtils.isEmpty(mPort) || TextUtils.isEmpty(mVideoName));
 		if (EasyCameraApp.sState != EasyCameraApp.STATE_DISCONNECTED) {
 			setStateDescription(EasyCameraApp.sState);
 		}
@@ -169,103 +182,145 @@ public class VideoStreamingActivity extends Activity implements Callback,
 			startActivityForResult(new Intent(this, SettingsActivity.class),
 					REQUEST_SETTING);
 		} else {
+			streaminglink = String.format("rtsp://%s:%d/%s.sdp", mAddress,
+					Integer.parseInt(mPort), mVideoName);
 			ipView.setText(String.format("rtsp://%s:%d/%s.sdp", mAddress,
-					Integer.parseInt(mPort), mDeviceId));
+					Integer.parseInt(mPort), mVideoName));
 		}
-
 
 		/** TODO================================================================ */
 
-		connection = GetConnection(username, password);
+		//connection = GetConnection(username, password);
+		new GetXMPPConnection().execute();
 		// Set the status to available
-		Presence presence = new Presence(Presence.Type.available);
-		connection.sendPacket(presence);
-		// get message listener
-		ReceiveMsgListenerConnection(connection);
-//		(new ReceiveMessageThread()).start();
-			
+//		Presence presence = new Presence(Presence.Type.available);
+//		connection.sendPacket(presence);
+//		// get message listener
+//		ReceiveMsgListenerConnection(connection);
+		// (new ReceiveMessageThread()).start();
+
 		btnSelectContact.setOnClickListener(this);
 		btnOption.setOnClickListener(this);
 		btnStop.setOnClickListener(this);
 		btnSendMessage.setOnClickListener(this);
 	}
-	
-	public void initView(){
-		
+
+	public void initView() {
+
 		mAddress = preferences.getString("key_server_address", null);
 		mPort = preferences.getString("key_server_port", null);
-		mDeviceId = preferences.getString("key_device_id", null);
+		mVideoName = preferences.getString("key_device_id",null/*	EasyCameraApp.getDefaultDeviceId()*/);
 		ipView = (TextView) findViewById(R.id.main_text_description);
-		mTime = (TextView) findViewById(R.id.timeDisplay);	
-		
+		mTime = (TextView) findViewById(R.id.timeDisplay);
+
 		mSurfaceView = (net.majorkernelpanic.streaming.gl.SurfaceView) findViewById(R.id.surface);
 		mSurfaceView.setAspectRatioMode(SurfaceView.ASPECT_RATIO_PREVIEW);
 		surfaceHolder = mSurfaceView.getHolder();
 		surfaceHolder.addCallback(this);
-		surfaceHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);// needed for sdk<11
+		surfaceHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);// needed
+																		// for
+																		// sdk<11
 
 		btnSelectContact = (Button) findViewById(R.id.btnPlay);
-		btnOption = (Button) findViewById(R.id.btnOptions);		
+		btnOption = (Button) findViewById(R.id.btnOptions);
 		btnStop = (Button) findViewById(R.id.btnStop);
-		
+
 		username = getIntent().getStringExtra("username");
 		password = getIntent().getStringExtra("password");
+		entries = getIntent().getStringExtra("entries");
+
 		textMessage = (EditText) findViewById(R.id.edit_say_something);
 		btnSendMessage = (Button) findViewById(R.id.btn_send_message);
 	}
+
 	@Override
 	public void onClick(View v) {
-		switch(v.getId()){
+		switch (v.getId()) {
 		case R.id.btnPlay:
 			if (!alive) {
 				// popupContactList();
-				popupContactList(username, password);
+				popupContactList(entries);
 			} else {
 				alive = false;
 				stopStream();
 				btnSelectContact.setBackgroundResource(R.drawable.play);
-				ipView.setText(String.format("rtsp://%s:%d/%s.sdp",
-						mAddress, Integer.parseInt(mPort), mDeviceId));
+				ipView.setText(String.format("rtsp://%s:%d/%s.sdp", mAddress,
+						Integer.parseInt(mPort), mVideoName));
 			}
-			
+
 			break;
 		case R.id.btnOptions:
 			Intent intent = new Intent();
-			intent.setClass(VideoStreamingActivity.this,
-					SettingsActivity.class);
+			intent.setClass(VideoStreamingActivity.this, SettingsActivity.class);
 			startActivityForResult(intent, REQUEST_SETTING);
-			
-			break;			
+
+			break;
 		case R.id.btnStop:
 			if (alive) {
 				alive = false;
 				stopStream();
 				btnSelectContact.setBackgroundResource(R.drawable.play);
-				ipView.setText(String.format("rtsp://%s:%d/%s.sdp",
-						mAddress, Integer.parseInt(mPort), mDeviceId));
+				ipView.setText(String.format("rtsp://%s:%d/%s.sdp", mAddress,
+						Integer.parseInt(mPort), mVideoName));
 			}
 			VideoStreamingActivity.this.finish();
-			
+
 			break;
 		case R.id.btn_send_message:
-			String to = "user11@myria";
+			String to = "admin@myria";
 			String text = textMessage.getText().toString();
-			Log.i("XMPPChatDemoActivity", "Sending text " + text + " to "
-					+ to);
-			Message msg = new Message(to, Message.Type.chat);
-			msg.setBody(text);
-			if (connection != null) {
-				connection.sendPacket(msg);
-				messages.add(connection.getUser().split("@")[0] + ":");
-				messages.add(text);
-				Toast.makeText(getApplicationContext(), text,
+			if(!text.equals("")&&text!=null){
+				Log.i("XMPPChatDemoActivity", "Sending text " + text + " to " + to);
+				Message msg = new Message(to, Message.Type.chat);
+				msg.setBody(text);
+				if (connection != null) {
+					connection.sendPacket(msg);
+					messages.add(connection.getUser().split("@")[0] + ":");
+					messages.add(text);
+					Toast.makeText(getApplicationContext(), text,
+							Toast.LENGTH_SHORT).show();
+				}
+				textMessage.setText("");
+			}else{
+				Toast.makeText(getApplicationContext(), "The input cannot be null!",
 						Toast.LENGTH_SHORT).show();
 			}
-			
 			break;
 		}
 	}
-	// start video streaming function
+
+	/**
+	 * Get All the Friends of user
+	 * 
+	 * @param entries
+	 * @return
+	 */
+	private List<Map<String, String>> getFriendsList(String entries) {
+		String[] entryList = entries.split(", ");
+		friendList = new ArrayList<Map<String, String>>();
+		for (String entry : entryList) {
+
+			Map<String, String> map = new HashMap<String, String>();
+
+			String[] s = entry.toString().split(" ");
+
+			if (s.length == 2) {
+				map.put("name", s[0].substring(0, s[0].length() - 1));
+				map.put("username", s[1]);
+			} else if (s.length == 3) {
+				map.put("name", s[0].substring(0, s[0].length() - 1));
+				map.put("username", s[1]);
+				map.put("group", s[2].substring(1, s[2].length() - 1));
+			}
+			friendList.add(map);
+		}
+		System.out.println(friendList.toString());
+		return friendList;
+	}
+
+	/**
+	 * start video streaming function
+	 */
 	private void PLAY() {
 		preferences = PreferenceManager.getDefaultSharedPreferences(this);
 
@@ -296,7 +351,7 @@ public class VideoStreamingActivity extends Activity implements Callback,
 							"p_video_encoder", String.valueOf(videoEncoder)));
 
 					Matcher matcher = pattern.matcher(preferences.getString(
-							"video_resolution", "176x144"));
+							"video_resolution", "320x240"));
 					matcher.find();
 
 					videoQuality = new VideoQuality(Integer.parseInt(matcher
@@ -304,7 +359,7 @@ public class VideoStreamingActivity extends Activity implements Callback,
 							Integer.parseInt(preferences.getString(
 									"video_framerate", "15")),
 							Integer.parseInt(preferences.getString(
-									"video_bitrate", "500")) * 1000);
+									"video_bitrate", "300")) * 1000);
 					mSession = SessionBuilder.getInstance()
 							.setContext(getApplicationContext())
 							.setAudioEncoder(audioEnable ? audioEncoder : 0)
@@ -313,7 +368,7 @@ public class VideoStreamingActivity extends Activity implements Callback,
 							.setVideoEncoder(videoEnable ? videoEncoder : 0)
 							.setOrigin("127.0.0.0").setDestination(mAddress)
 							.setSurfaceView(mSurfaceView)
-							.setPreviewOrientation(0)
+							 .setPreviewOrientation(0)
 							.setCallback(VideoStreamingActivity.this).build();
 				}
 
@@ -352,11 +407,13 @@ public class VideoStreamingActivity extends Activity implements Callback,
 	private void stopStream() {
 		if (mClient != null) {
 			mClient.release();
+			mClient.stopStream();
 			mClient = null;
 		}
 
 		if (mSession != null) {
 			mSession.release();
+//			mSession.stop();
 			mSession = null;
 		}
 
@@ -433,7 +490,6 @@ public class VideoStreamingActivity extends Activity implements Callback,
 		};
 	}
 
-
 	private ArrayList<String> messages = new ArrayList<String>();
 	private Handler mHandler = new Handler();
 	private ListView listview;
@@ -444,10 +500,10 @@ public class VideoStreamingActivity extends Activity implements Callback,
 	private PopupWindow popFriends;
 	private PopupWindow popStreamingLink;
 	private FriendsAdapter friendsAdapter;
-	private List<Map<String, String>> listMap;
+
 	private ArrayList<String> selectedListMap = new ArrayList<String>();
 
-	private String streaminglink = "http://129.128.184.46:8554/live.sdp";
+	//
 
 	private void MessageAdapter() {
 		ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
@@ -457,16 +513,16 @@ public class VideoStreamingActivity extends Activity implements Callback,
 
 	// Select contact function
 
-	private void popupContactList(String username, String password) {
+	private void popupContactList(String entries) {
 
-		//connection = GetConnection(username, password);
+		// connection = GetConnection(username, password);
 
 		final View v = getLayoutInflater().inflate(R.layout.friendlist, null,
 				false);
 		int h = getWindowManager().getDefaultDisplay().getHeight();
 		int w = getWindowManager().getDefaultDisplay().getWidth();
 
-		listMap = new ArrayList<Map<String, String>>();
+		friendList = getFriendsList(entries);
 
 		popFriends = new PopupWindow(v, w - 10, (int) (((2.8) * h) / 4));
 		popFriends.setAnimationStyle(R.style.MyDialogStyleBottom);
@@ -482,7 +538,7 @@ public class VideoStreamingActivity extends Activity implements Callback,
 
 		friendlistView = (ListView) v.findViewById(R.id.friendlist);
 		friendlistView.setItemsCanFocus(true);
-		friendsAdapter = new FriendsAdapter(username, password, this, listMap);
+		friendsAdapter = new FriendsAdapter(this, friendList);
 
 		friendlistView.setAdapter(friendsAdapter);
 		friendlistView.setOnItemClickListener(new OnItemClickListener() {
@@ -491,7 +547,8 @@ public class VideoStreamingActivity extends Activity implements Callback,
 			public void onItemClick(AdapterView<?> arg0, View v, int position,
 					long arg3) {
 				// TODO Auto-generated method stub
-				//TextView name = (TextView) v.findViewById(R.id.friend_username);
+				// TextView name = (TextView)
+				// v.findViewById(R.id.friend_username);
 				CheckBox checkbox = (CheckBox) v.findViewById(R.id.check_box);
 				checkbox.toggle();
 
@@ -499,7 +556,8 @@ public class VideoStreamingActivity extends Activity implements Callback,
 						checkbox.isChecked());
 
 				if (checkbox.isChecked()) {
-					selectedListMap.add(listMap.get(position).get("username"));
+					selectedListMap.add(friendList.get(position)
+							.get("username"));
 
 				}
 			}
@@ -509,37 +567,41 @@ public class VideoStreamingActivity extends Activity implements Callback,
 		btn_Send.setOnClickListener(new View.OnClickListener() {
 			public void onClick(View view) {
 				// START TO PUSH VIDEO
-				//PLAY();
-				Log.i("PLAY","following should be streainglink====");
+				PLAY();
+				Log.i("PLAY", "following should be streainglink====");
 				if (popFriends != null)
 					popFriends.dismiss();
-				// new thread to send message
-				try {
-					connection.connect();
-				} catch (XMPPException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
+				// keep connection
+				// try {
+				// connection.connect();
+				// } catch (XMPPException e) {
+				// // TODO Auto-generated catch block
+				// e.printStackTrace();
+				// }
 				mHandler.post(new Runnable() {
-				public void run() {
-				for (int i = 0; i < selectedListMap.size(); i++) {
-					Log.i("XMPPChatDemoActivity", "Sending text "
-							+ streaminglink + " to " + selectedListMap.get(i));
-					Message msg = new Message(selectedListMap.get(i),
-							Message.Type.chat);
-					msg.setBody(streaminglink);
-					if (connection != null ) {
-						
-						connection.sendPacket(msg);
-						messages.add(selectedListMap.get(i).split("@")[0] + ":");
-						//Log.i("XMPPChatDemoActivity",connection.getUser());
-						messages.add(streaminglink);
-						Toast.makeText(getApplicationContext(), streaminglink, Toast.LENGTH_SHORT).show();
+					public void run() {
+						for (int i = 0; i < selectedListMap.size(); i++) {
+							Log.i("XMPPChatDemoActivity",
+									"Sending text " + streaminglink + " to "
+											+ selectedListMap.get(i));
+							Message msg = new Message(selectedListMap.get(i),
+									Message.Type.chat);
+							msg.setBody(streaminglink);
+							if (connection != null) {
+
+								connection.sendPacket(msg);
+								messages.add(selectedListMap.get(i).split("@")[0]
+										+ ":");
+								// Log.i("XMPPChatDemoActivity",connection.getUser());
+								messages.add(streaminglink);
+								Toast.makeText(getApplicationContext(),
+										streaminglink, Toast.LENGTH_SHORT)
+										.show();
+							}
+						}
 					}
-				}
+				});
 			}
-			 });
-			 }
 		});
 		Button btn_send_cancel = (Button) v.findViewById(R.id.btn_send_cancel);
 		btn_send_cancel.setOnClickListener(new View.OnClickListener() {
@@ -591,22 +653,19 @@ public class VideoStreamingActivity extends Activity implements Callback,
 						messages.add(message.getBody());
 						final String msg = message.getBody().toString();
 						// Add the incoming message to the list view
-
-						 mHandler.post(new Runnable() {
-						 public void run() {
-							// notification or chat...
-							if (msg.equals(streaminglink)) {
-								Log.i("XMPPChatDemoActivity", msg);
-								popupReceiveStreamingLinkMessage(msg);
-							} else {
-								Toast.makeText(getApplicationContext(),
-										fromName[0] + ": " + msg, Toast.LENGTH_LONG)
-										.show();
-	
+						Log.i("XMPPChatDemoActivity", msg);
+						mHandler.post(new Runnable() {
+							public void run() {
+								// notification or chat...
+								if (msg.contains("rtsp://129.128.184.46/"))	
+									popupReceiveStreamingLinkMessage(msg);
+								else 
+									Toast.makeText(getApplicationContext(),
+											fromName[0] + ": " + msg,
+											Toast.LENGTH_SHORT).show();
 							}
-						}
-					 });
-					 }
+						});
+					}
 				}
 			}, filter);
 		}
@@ -660,7 +719,24 @@ public class VideoStreamingActivity extends Activity implements Callback,
 			e.printStackTrace();
 		}
 	}
+	@Override
+	public void onPause() {
+		super.onPause();
+		stopStream();
+	}
 
+	@Override
+	public void onStart() {
+		super.onStart();
+		wl.acquire();
+	}
+
+	@Override
+	public void onStop() {
+		super.onStop();
+		if (wl.isHeld())
+			wl.release();
+	}
 	// Add user
 	public static boolean addUsers(Roster roster, String userName, String name) {
 		try {
@@ -740,7 +816,7 @@ public class VideoStreamingActivity extends Activity implements Callback,
 		case EasyCameraApp.STATE_CONNECTED:
 			ipView.setText(String.format(
 					"Input this URL in VLC player:\nrtsp://%s:%d/%s.sdp",
-					mAddress, mPort, mDeviceId));
+					mAddress, mPort, mVideoName));
 			break;
 		case EasyCameraApp.STATE_CONNECTING:
 			ipView.setText(null);
@@ -753,8 +829,10 @@ public class VideoStreamingActivity extends Activity implements Callback,
 	@Override
 	public void onBitrareUpdate(long bitrate) {
 		if (mClient != null) {
-
-			ipView.setText("" + bitrate / 1000 + " kbps");
+			if (bitrate / 1000 > 300)
+				ipView.setText("	" + bitrate / 1000 + " kbps");
+			else
+				ipView.setText(" The current network is not stable ");
 		}
 	}
 
@@ -785,11 +863,13 @@ public class VideoStreamingActivity extends Activity implements Callback,
 		}
 		if (mClient != null) {
 			mClient.release();
+			mClient.stopStream();
 			mClient = null;
 		}
 
 		if (mSession != null) {
 			mSession.release();
+			mSession.stop();
 			mSession = null;
 		}
 	}
@@ -810,7 +890,7 @@ public class VideoStreamingActivity extends Activity implements Callback,
 
 					if (state == EasyCameraApp.STATE_CONNECTED) {
 						ipView.setText(String.format("rtsp://%s:%d/%s.sdp",
-								mAddress, Integer.parseInt(mPort), mDeviceId));
+								mAddress, Integer.parseInt(mPort), mVideoName));
 					}
 
 				} else {
@@ -843,7 +923,7 @@ public class VideoStreamingActivity extends Activity implements Callback,
 							// CommandService.class));
 							ipView.setText(String.format("rtsp://%s:%d/%s.sdp",
 									mAddress, Integer.parseInt(mPort),
-									mDeviceId));
+									mVideoName));
 						}
 					}
 				}
@@ -859,9 +939,10 @@ public class VideoStreamingActivity extends Activity implements Callback,
 
 			mAddress = pref.getString("key_server_address", null);
 			mPort = pref.getString("key_server_port", null);
-			mDeviceId = pref.getString("key_device_id", null);
+			mVideoName = pref.getString("key_device_id", null);
 			boolean bParamInvalid = (TextUtils.isEmpty(mAddress)
-					|| TextUtils.isEmpty(mPort) || TextUtils.isEmpty(mDeviceId));
+					|| TextUtils.isEmpty(mPort) || TextUtils
+					.isEmpty(mVideoName));
 			if (!bParamInvalid) {
 				// startService(new Intent(this, CommandService.class));
 				//
@@ -880,6 +961,48 @@ public class VideoStreamingActivity extends Activity implements Callback,
 		}
 
 	}
+
+	private final OnSharedPreferenceChangeListener spcl = new OnSharedPreferenceChangeListener() {
+
+		public void onSharedPreferenceChanged(SharedPreferences pre, String key) {
+			if (key.equals("p_audio_encoder") || key.equals("p_stream_audio")) {
+				audioEncoder = Integer.parseInt(pre.getString(
+						"p_audio_encoder", String.valueOf(audioEncoder)));
+				SessionBuilder.getInstance().setAudioEncoder(audioEncoder);
+				if (!pre.getBoolean("p_stream_audio", true))
+					SessionBuilder.getInstance().setAudioEncoder(0);
+			}
+
+			else if (key.equals("p_stream_video")
+					|| key.equals("p_video_encoder")) {
+				videoEncoder = Integer.parseInt(pre.getString(
+						"p_video_encoder", String.valueOf(videoEncoder)));
+				SessionBuilder.getInstance().setVideoEncoder(videoEncoder);
+				if (!pre.getBoolean("p_stream_video", true))
+					SessionBuilder.getInstance().setVideoEncoder(0);
+
+			} else if (key.equals("video_resolution")) {
+				Pattern pattern = Pattern.compile("([0-9]+)x([0-9]+)");
+				Matcher matcher = pattern.matcher(preferences.getString(
+						"video_resolution", "320x240"));
+				matcher.find();
+				//videoQuality.
+				Log.i("Integer.parseInt(matcher.group(1))",matcher.group(1));
+//				videoQuality.resX = Integer.parseInt(matcher.group(1));
+//				videoQuality.resY = Integer.parseInt(matcher.group(2));
+			} else if (key.equals("video_framerate")) {
+				videoQuality.framerate = Integer.parseInt(preferences
+						.getString("video_framerate", "15"));
+			} else if (key.equals("video_bitrate")) {
+				videoQuality.bitrate = Integer.parseInt(preferences.getString(
+						"video_bitrate", "300")) * 1000;
+			} else if (key.equals("video_camera")) {
+				SessionBuilder.getInstance().setCamera(
+						Integer.parseInt(preferences.getString("video_camera",
+								"0")));
+			}
+		}
+	};
 
 	public void configureProviderManager(ProviderManager pm) {
 
@@ -1073,6 +1196,38 @@ public class VideoStreamingActivity extends Activity implements Callback,
 
 		} else {
 			// nothing to do
+		}
+	}
+
+	private class GetXMPPConnection extends AsyncTask {
+		@Override
+		protected XMPPConnection doInBackground(Object... urls) {
+			try {
+				if (null == connection || !connection.isAuthenticated()) {
+					XMPPConnection.DEBUG_ENABLED = true;
+
+					ConnectionConfiguration config = new ConnectionConfiguration(
+							UserServiceImpl.SERVER_HOST,
+							UserServiceImpl.SERVER_PORT,
+							UserServiceImpl.SERVER_NAME);
+					config.setReconnectionAllowed(true);
+					config.setSendPresence(true);
+					config.setSASLAuthenticationEnabled(true);
+					connection = new XMPPConnection(config);
+					connection.connect();
+					connection.login(username, password);
+					// Set the status to available
+					Presence presence = new Presence(Presence.Type.available);
+					connection.sendPacket(presence);
+					// get message listener
+					ReceiveMsgListenerConnection(connection);
+					return connection;
+				}
+			} catch (XMPPException e) {
+				e.printStackTrace();
+			}
+
+			return connection;
 		}
 	}
 }
