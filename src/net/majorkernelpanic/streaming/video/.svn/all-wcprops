@@ -1,0 +1,35 @@
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/repos/VideoStreaming/!svn/ver/10/MediaStreaming/src/net/majorkernelpanic/streaming/video
+END
+H264Stream.java
+K 25
+svn:wc:ra_dav:version-url
+V 104
+/repos/VideoStreaming/!svn/ver/7/MediaStreaming/src/net/majorkernelpanic/streaming/video/H264Stream.java
+END
+VideoQuality.java
+K 25
+svn:wc:ra_dav:version-url
+V 106
+/repos/VideoStreaming/!svn/ver/7/MediaStreaming/src/net/majorkernelpanic/streaming/video/VideoQuality.java
+END
+VideoStream.java
+K 25
+svn:wc:ra_dav:version-url
+V 106
+/repos/VideoStreaming/!svn/ver/10/MediaStreaming/src/net/majorkernelpanic/streaming/video/VideoStream.java
+END
+CodecManager.java
+K 25
+svn:wc:ra_dav:version-url
+V 106
+/repos/VideoStreaming/!svn/ver/7/MediaStreaming/src/net/majorkernelpanic/streaming/video/CodecManager.java
+END
+H263Stream.java
+K 25
+svn:wc:ra_dav:version-url
+V 104
+/repos/VideoStreaming/!svn/ver/7/MediaStreaming/src/net/majorkernelpanic/streaming/video/H263Stream.java
+END

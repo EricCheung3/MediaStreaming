@@ -1,0 +1,29 @@
+K 25
+svn:wc:ra_dav:version-url
+V 93
+/repos/VideoStreaming/!svn/ver/7/MediaStreaming/src/net/majorkernelpanic/streaming/exceptions
+END
+StorageUnavailableException.java
+K 25
+svn:wc:ra_dav:version-url
+V 126
+/repos/VideoStreaming/!svn/ver/7/MediaStreaming/src/net/majorkernelpanic/streaming/exceptions/StorageUnavailableException.java
+END
+CameraInUseException.java
+K 25
+svn:wc:ra_dav:version-url
+V 119
+/repos/VideoStreaming/!svn/ver/7/MediaStreaming/src/net/majorkernelpanic/streaming/exceptions/CameraInUseException.java
+END
+ConfNotSupportedException.java
+K 25
+svn:wc:ra_dav:version-url
+V 124
+/repos/VideoStreaming/!svn/ver/7/MediaStreaming/src/net/majorkernelpanic/streaming/exceptions/ConfNotSupportedException.java
+END
+InvalidSurfaceException.java
+K 25
+svn:wc:ra_dav:version-url
+V 122
+/repos/VideoStreaming/!svn/ver/7/MediaStreaming/src/net/majorkernelpanic/streaming/exceptions/InvalidSurfaceException.java
+END

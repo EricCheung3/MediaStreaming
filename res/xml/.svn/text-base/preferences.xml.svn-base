@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
+
+    <PreferenceCategory android:title="@string/settings1" >
+        <EditTextPreference
+            android:defaultValue="live"
+            android:key="p_stream_name"
+            android:title="@string/settings10" />
+        <EditTextPreference
+            android:defaultValue="172.28.80.140"
+            android:key="rtsp_ip"
+            android:summary="@string/settings30"
+            android:title="@string/settings29" />
+        <EditTextPreference
+            android:defaultValue="5544"
+            android:inputType="number"
+            android:key="rtsp_port"
+            android:summary="@string/settings32"
+            android:title="@string/settings31" />
+    </PreferenceCategory>
+    <PreferenceCategory android:title="@string/settings3" >
+        <CheckBoxPreference
+            android:defaultValue="true"
+            android:key="p_stream_audio"
+            android:summary="@string/settings4"
+            android:title="@string/settings3" />
+
+        <ListPreference
+            android:defaultValue="3"
+            android:entries="@array/audioEncoderArray"
+            android:entryValues="@array/audioEncoderValues"
+            android:key="p_audio_encoder"
+            android:title="@string/settings5" />
+    </PreferenceCategory>
+    <PreferenceCategory android:title="@string/settings7" >
+        <CheckBoxPreference
+            android:defaultValue="true"
+            android:key="p_stream_video"
+            android:summary="@string/settings8"
+            android:title="@string/settings7" />
+
+        <ListPreference
+            android:defaultValue="1"
+            android:entries="@array/videoEncoderArray"
+            android:entryValues="@array/videoEncoderValues"
+            android:key="p_video_encoder"
+            android:title="@string/settings9" />
+        <ListPreference
+            android:defaultValue="0"
+            android:entries="@array/cameraArray"
+            android:entryValues="@array/cameraValues"
+            android:key="p_video_camera"
+            android:title="@string/settings13" />
+        <ListPreference
+            android:defaultValue="640x480"
+            android:entries="@array/videoResolutionArray"
+            android:entryValues="@array/videoResolutionArray"
+            android:key="video_resolution"
+            android:title="@string/settings11" />
+        <ListPreference
+            android:defaultValue="15"
+            android:entries="@array/videoFramerateArray"
+            android:entryValues="@array/videoFramerateValues"
+            android:key="video_framerate"
+            android:title="@string/settings15" />
+        <ListPreference
+            android:defaultValue="500"
+            android:entries="@array/videoBitrateArray"
+            android:entryValues="@array/videoBitrateValues"
+            android:key="video_bitrate"
+            android:title="@string/settings16" />
+    </PreferenceCategory>
+
+</PreferenceScreen>

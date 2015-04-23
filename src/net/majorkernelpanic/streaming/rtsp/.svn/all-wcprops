@@ -1,0 +1,29 @@
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/repos/VideoStreaming/!svn/ver/7/MediaStreaming/src/net/majorkernelpanic/streaming/rtsp
+END
+RtspServer.java
+K 25
+svn:wc:ra_dav:version-url
+V 103
+/repos/VideoStreaming/!svn/ver/7/MediaStreaming/src/net/majorkernelpanic/streaming/rtsp/RtspServer.java
+END
+RtcpDeinterleaver.java
+K 25
+svn:wc:ra_dav:version-url
+V 110
+/repos/VideoStreaming/!svn/ver/7/MediaStreaming/src/net/majorkernelpanic/streaming/rtsp/RtcpDeinterleaver.java
+END
+RtspClient.java
+K 25
+svn:wc:ra_dav:version-url
+V 103
+/repos/VideoStreaming/!svn/ver/7/MediaStreaming/src/net/majorkernelpanic/streaming/rtsp/RtspClient.java
+END
+UriParser.java
+K 25
+svn:wc:ra_dav:version-url
+V 102
+/repos/VideoStreaming/!svn/ver/7/MediaStreaming/src/net/majorkernelpanic/streaming/rtsp/UriParser.java
+END

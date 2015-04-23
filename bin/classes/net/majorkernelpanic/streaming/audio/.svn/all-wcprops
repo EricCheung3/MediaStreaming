@@ -1,0 +1,29 @@
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/repos/VideoStreaming/!svn/ver/7/MediaStreaming/src/net/majorkernelpanic/streaming/audio
+END
+AACStream.java
+K 25
+svn:wc:ra_dav:version-url
+V 103
+/repos/VideoStreaming/!svn/ver/7/MediaStreaming/src/net/majorkernelpanic/streaming/audio/AACStream.java
+END
+AudioQuality.java
+K 25
+svn:wc:ra_dav:version-url
+V 106
+/repos/VideoStreaming/!svn/ver/7/MediaStreaming/src/net/majorkernelpanic/streaming/audio/AudioQuality.java
+END
+AMRNBStream.java
+K 25
+svn:wc:ra_dav:version-url
+V 105
+/repos/VideoStreaming/!svn/ver/7/MediaStreaming/src/net/majorkernelpanic/streaming/audio/AMRNBStream.java
+END
+AudioStream.java
+K 25
+svn:wc:ra_dav:version-url
+V 105
+/repos/VideoStreaming/!svn/ver/7/MediaStreaming/src/net/majorkernelpanic/streaming/audio/AudioStream.java
+END

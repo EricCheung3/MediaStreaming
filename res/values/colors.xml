@@ -1,0 +1,14 @@
+<resources>
+
+    <color name="black_overlay">#66000000</color>
+    <color name="divider_color">#FFCCCCCC</color>
+    <color name="headlayout_color">#019fde</color>
+    <color name="translucent">#00000000</color>
+    <color name="bg_color">#f5f6f7</color> <!-- background color -->
+    <color name="black">#000001</color>
+    <color name="white">#FFFFFF</color>
+    <color name="yellow">#ffff00</color>
+    <color name="red1">#DC143C</color>
+    <color name="blue">#333333</color>
+
+</resources>

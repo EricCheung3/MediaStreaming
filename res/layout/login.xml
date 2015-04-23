@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/loginRoot"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="vertical" >
+
+    <LinearLayout
+        android:id="@+id/linear1"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:background="@drawable/default_bg"
+        android:orientation="vertical" >
+
+        <RelativeLayout
+            android:id="@+id/relativelayout2"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="15.0px"
+            android:layout_marginRight="15.0px"
+            android:layout_marginTop="62.0px"
+            android:paddingBottom="10.0px"
+            android:paddingTop="21.0px" >
+
+            <EditText
+                android:id="@+id/edit_username"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignParentTop="true"
+                android:layout_marginBottom="5.0dip"
+                android:layout_marginLeft="5.0dip"
+                android:layout_marginRight="5.0dip"
+                android:layout_marginTop="5.0dip"
+                android:hint="Username/Email/Userid"
+                android:saveEnabled="true"
+                android:singleLine="true"
+                android:textColor="#ff3f3f3f" />
+
+            <EditText
+                android:id="@+id/edit_password"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/edit_username"
+                android:layout_marginBottom="5.0dip"
+                android:layout_marginLeft="5.0dip"
+                android:layout_marginRight="5.0dip"
+                android:layout_marginTop="5.0dip"
+                android:hint="Password"
+                android:password="true"
+                android:saveEnabled="true"
+                android:singleLine="true"
+                android:textColor="#ff3f3f3f" />
+
+            <Button
+                android:id="@+id/btn_login"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignRight="@+id/edit_password"
+                android:layout_below="@+id/cb_savepwd"
+                android:layout_marginTop="7.0px"
+                android:layout_alignLeft="@+id/edit_password"
+                android:text="login" />
+
+            <CheckBox
+                android:id="@+id/cb_savepwd"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/edit_password"
+                android:layout_alignLeft="@+id/edit_password"
+                android:button="@drawable/btn_check"
+                android:text="remember password"
+                android:textColor="#ff222222"
+                android:textSize="16.0sp" />
+        </RelativeLayout>
+
+
+        <RelativeLayout
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical" >
+
+            <Button
+                android:id="@+id/btn_register"
+                android:layout_width="90.0dp"
+                android:layout_height="wrap_content"
+                android:layout_alignParentBottom="true"
+                android:layout_centerHorizontal="true"
+                android:text="register" />
+
+            <TextView
+                android:id="@+id/registerInfo"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_above="@id/btn_register"
+                android:singleLine="true"
+                android:text="Do not have an account? Register!"
+                android:textColor="@color/yellow" />
+        </RelativeLayout>
+    </LinearLayout>
+
+</LinearLayout>

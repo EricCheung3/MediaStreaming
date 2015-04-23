@@ -1,0 +1,41 @@
+K 25
+svn:wc:ra_dav:version-url
+V 48
+/repos/VideoStreaming/!svn/ver/10/MediaStreaming
+END
+.classpath
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/repos/VideoStreaming/!svn/ver/7/MediaStreaming/.classpath
+END
+project.properties
+K 25
+svn:wc:ra_dav:version-url
+V 66
+/repos/VideoStreaming/!svn/ver/7/MediaStreaming/project.properties
+END
+.project
+K 25
+svn:wc:ra_dav:version-url
+V 56
+/repos/VideoStreaming/!svn/ver/7/MediaStreaming/.project
+END
+proguard-project.txt
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/repos/VideoStreaming/!svn/ver/7/MediaStreaming/proguard-project.txt
+END
+AndroidManifest.xml
+K 25
+svn:wc:ra_dav:version-url
+V 67
+/repos/VideoStreaming/!svn/ver/7/MediaStreaming/AndroidManifest.xml
+END
+ic_launcher-web.png
+K 25
+svn:wc:ra_dav:version-url
+V 67
+/repos/VideoStreaming/!svn/ver/7/MediaStreaming/ic_launcher-web.png
+END

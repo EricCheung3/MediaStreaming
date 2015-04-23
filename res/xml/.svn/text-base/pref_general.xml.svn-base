@@ -1,0 +1,96 @@
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
+
+    <!-- NOTE: EditTextPreference accepts EditText attributes. -->
+    <!-- NOTE: EditTextPreference's summary should be set to its value by the activity code. -->
+    <PreferenceCategory android:title="@string/settings1" >
+        <EditTextPreference
+            android:defaultValue="live"
+            android:key="key_device_id"
+            android:selectAllOnFocus="true"
+            android:singleLine="true"
+            android:title="@string/settings10" />
+        <EditTextPreference
+            android:defaultValue="172.28.80.140"
+            android:key="key_server_address"
+            android:selectAllOnFocus="true"
+            android:singleLine="true"
+            android:summary="@string/settings30"
+            android:title="@string/settings29" />
+        <EditTextPreference
+            android:defaultValue="8554"
+            android:inputType="number"
+            android:key="key_server_port"
+            android:selectAllOnFocus="true"
+            android:singleLine="true"
+            android:summary="@string/settings32"
+            android:title="@string/settings31" />
+    </PreferenceCategory>
+    <PreferenceCategory android:title="@string/settings3" >
+        <CheckBoxPreference
+            android:defaultValue="true"
+            android:key="p_stream_audio"
+            android:summary="@string/settings4"
+            android:title="@string/settings3" />
+        <ListPreference
+            android:defaultValue="3"
+            android:entries="@array/audioEncoderArray"
+            android:entryValues="@array/audioEncoderValues"
+            android:key="p_audio_encoder"
+            android:title="@string/settings5" />
+    </PreferenceCategory>
+    
+    <PreferenceCategory android:title="@string/settings7" >
+        <CheckBoxPreference
+            android:defaultValue="true"
+            android:key="p_stream_video"
+            android:summary="@string/settings8"
+            android:title="@string/settings7" />
+
+        <ListPreference
+            android:defaultValue="1"
+            android:entries="@array/videoEncoderArray"
+            android:entryValues="@array/videoEncoderValues"
+            android:key="p_video_encoder"
+            android:title="@string/settings9" />
+        <ListPreference
+            android:defaultValue="1280x720"
+            android:entries="@array/videoResolutionArray"
+            android:entryValues="@array/videoResolutionArray"
+            android:key="video_resolution"
+            android:title="@string/settings11" />
+
+<!-- video_resolution/video_framerate/ -->
+        <EditTextPreference
+            android:capitalize="words"
+            android:defaultValue="25"
+            android:inputType="number"
+            android:key="frame_rate"
+            android:maxLines="1"
+            android:selectAllOnFocus="true"
+            android:singleLine="true"
+            android:title="FrameRate" />
+
+        <ListPreference
+            android:defaultValue="2"
+            android:entries="@array/bit_rate_level_array"
+            android:entryValues="@array/bit_rate_level_array_value"
+            android:key="bit_rate"
+            android:negativeButtonText="@null"
+            android:positiveButtonText="@null"
+            android:title="BitRate" />
+        <ListPreference
+            android:defaultValue="0"
+            android:entries="@array/pref_transport_list_titles"
+            android:entryValues="@array/pref_transport_list_values"
+            android:key="key_transport_list"
+            android:negativeButtonText="@null"
+            android:positiveButtonText="@null"
+            android:title="TransmissonMode" />
+    </PreferenceCategory>
+
+    <Preference
+        android:key="key_about"
+        android:title="v4.0" >
+    </Preference>
+
+</PreferenceScreen>

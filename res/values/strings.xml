@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">MediaStreaming</string>
+    <string name="action_settings">setting</string>
+    
+    <string name="options_activity_title">Setting</string>
+    <string name="settings1">RTSP Server address and port</string>
+    <string name="settings3">Audio Streaming</string>
+    <string name="settings4">Enable/Disable Audio</string>
+    <string name="settings5">Audio Decoder</string>
+    <string name="settings6">AAC requires at least ICS</string>
+    <string name="settings7">Video Streaming</string>
+    <string name="settings8">Enable/Disable Video</string>
+    <string name="settings9">Video Encoder</string>
+    <string name="settings11">Resolution</string>
+    <string name="settings10">Video Name</string>
+    <string name="settings13">Camera</string>
+    <string name="settings15">Framerate</string>
+    <string name="settings16">Bitrate</string>
+    <string name="settings29">Address</string>
+    <string name="settings30">RTSP server_address</string>
+    <string name="settings31">Port</string>
+    <string name="settings32">RTSP server_port</string>
+    
+    <string name="disconnect_server">disconnect with the server</string>
+        
+
+    <!-- Strings related to Settings -->
+	<string name="title_activity_settings">setting</string>
+
+    <!-- Example General settings -->
+    <string name="pref_header_general">General</string>
+    <!-- Example settings for Data & Sync -->
+    <string name="pref_header_data_sync">Data &amp; sync</string>
+    <string name="pref_title_sync_frequency">Sync frequency</string>	
+    <!-- Example settings for Notifications -->
+    <string name="pref_title_system_sync_settings">System sync settings</string> 
+    <string name="pref_header_notifications">Notifications</string>
+    <string name="pref_title_new_message_notifications">New message notifications</string>
+    <string name="pref_title_ringtone">Ringtone</string>
+    <string name="pref_ringtone_silent">Silent</string>
+    <string name="pref_title_vibrate">Vibrate</string>
+    
+    
+    <string name="collapsed">I\'m the collapsed notification.\nCreated at: %s</string>
+     <string name="collapsed_image">A single Android robot waving. Symbolises a collapsed
+        notification.
+    </string>
+    <string name="custom_notification">I\'m a custom notification.</string>
+</resources>

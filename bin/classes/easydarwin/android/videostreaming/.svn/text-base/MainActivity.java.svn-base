@@ -1,0 +1,497 @@
+package org.easydarwin.android.camera;
+
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import net.majorkernelpanic.streaming.Session;
+import net.majorkernelpanic.streaming.Session.Callback;
+import net.majorkernelpanic.streaming.SessionBuilder;
+import net.majorkernelpanic.streaming.audio.AudioQuality;
+import net.majorkernelpanic.streaming.gl.SurfaceView;
+import net.majorkernelpanic.streaming.rtp.RtpThread;
+import net.majorkernelpanic.streaming.rtsp.RtspClient;
+import net.majorkernelpanic.streaming.video.VideoQuality;
+import android.app.Activity;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.net.NetworkInfo.State;
+import android.os.AsyncTask;
+import android.os.Build;
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
+import android.preference.PreferenceManager;
+import android.support.v4.content.LocalBroadcastManager;
+import android.text.TextUtils;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.SurfaceHolder;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.view.WindowManager;
+import android.widget.Button;
+import android.widget.TextView;
+
+public class MainActivity extends Activity implements Callback,
+		RtspClient.Callback, android.view.SurfaceHolder.Callback {
+
+	private static final int REQUEST_SETTING = 1000;
+	//current system info msg 
+	private static final int msgKey1 = 1;
+	private BroadcastReceiver mReceiver;
+	private String mAddress;
+	private String mPort;
+	private String mDeviceId;
+	protected Session mSession;
+	protected RtspClient mClient;
+
+	/** Default quality of video streams. */
+	public VideoQuality videoQuality;
+	/** By default AMRNB is the audio encoder. */
+	public int audioEncoder = SessionBuilder.AUDIO_AMRNB;
+	/** By default H.264 is the video encoder. */
+	public int videoEncoder = SessionBuilder.VIDEO_H264;
+
+	private Button btnOption;
+	private Button btnPlay;
+	// private Button btnQuit;
+	private TextView ipView;
+	private TextView mTime;
+
+	private boolean alive = false;
+	private SurfaceView mSurfaceView;
+	private static SurfaceHolder surfaceHolder;
+
+	Pattern pattern = Pattern.compile("([0-9]+)x([0-9]+)");
+
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		getWindow().setFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON,
+				WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+		setContentView(R.layout.activity_main);
+
+		SharedPreferences pref = PreferenceManager
+				.getDefaultSharedPreferences(this);
+
+		final SharedPreferences preferences = PreferenceManager
+				.getDefaultSharedPreferences(MainActivity.this);
+
+		ConnectivityManager cm = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
+		NetworkInfo info = cm.getActiveNetworkInfo();
+		if (info != null) {
+			if (info.getType() == ConnectivityManager.TYPE_WIFI) {
+				pref.edit().putString("bit_rate", "4").commit();
+			} else {
+				pref.edit().putString("bit_rate", "2").commit();
+			}
+		}
+
+		mAddress = preferences.getString("key_server_address", null);
+		mPort = preferences.getString("key_server_port", null);
+		mDeviceId = preferences.getString("key_device_id", null);
+
+		ipView = (TextView) findViewById(R.id.main_text_description);
+		mTime = (TextView) findViewById(R.id.timeDisplay);
+
+		boolean bParamInvalid = (TextUtils.isEmpty(mAddress)
+				|| TextUtils.isEmpty(mPort) || TextUtils.isEmpty(mDeviceId));
+
+		if (EasyCameraApp.sState != EasyCameraApp.STATE_DISCONNECTED) {
+			setStateDescription(EasyCameraApp.sState);
+		}
+		if (bParamInvalid) {
+			startActivityForResult(new Intent(this, SettingsActivity.class),
+					REQUEST_SETTING);
+		} else {
+			ipView.setText(String.format("rtsp://%s:%d/%s.sdp", mAddress,
+					Integer.parseInt(mPort), mDeviceId));
+		}
+
+		mSurfaceView = (net.majorkernelpanic.streaming.gl.SurfaceView) findViewById(R.id.surface);
+		mSurfaceView.setAspectRatioMode(SurfaceView.ASPECT_RATIO_PREVIEW);
+		surfaceHolder = mSurfaceView.getHolder();
+		surfaceHolder.addCallback(this);
+		surfaceHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);// needed for sdk<11
+
+		btnPlay = (Button) findViewById(R.id.btnPlay);
+		btnPlay.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				if (alive) {
+					alive = false;
+					stopStream();
+					btnPlay.setBackgroundResource(R.drawable.play);
+					ipView.setText(String.format("rtsp://%s:%d/%s.sdp",
+							mAddress, Integer.parseInt(mPort), mDeviceId));
+				} else {
+					new AsyncTask<Void, Void, Integer>() {
+						@Override
+						protected void onProgressUpdate(Void... values) {
+							// TODO Auto-generated method stub
+							super.onProgressUpdate(values);
+							alive = true;
+							//start time thread
+							new CurrentTimeThread().start();
+							btnPlay.setBackgroundResource(R.drawable.pause);							
+						}
+
+						@Override
+						protected Integer doInBackground(Void... params) {
+
+							publishProgress();
+
+							if (mSession == null) {// 尝试不用session 直接加载video info
+								boolean audioEnable = preferences.getBoolean(
+										"p_stream_audio", true);
+								boolean videoEnable = preferences.getBoolean(
+										"p_stream_video", true);
+								audioEncoder = Integer.parseInt(preferences
+										.getString("p_audio_encoder",
+												String.valueOf(audioEncoder)));
+								videoEncoder = Integer.parseInt(preferences
+										.getString("p_video_encoder",
+												String.valueOf(videoEncoder)));
+
+								Matcher matcher = pattern.matcher(preferences
+										.getString("video_resolution",
+												"176x144"));
+								matcher.find();
+
+								videoQuality = new VideoQuality(Integer
+										.parseInt(matcher.group(1)), Integer
+										.parseInt(matcher.group(2)), Integer
+										.parseInt(preferences.getString(
+												"video_framerate", "15")),
+										Integer.parseInt(preferences.getString(
+												"video_bitrate", "500")) * 1000);
+								mSession = SessionBuilder
+										.getInstance()
+										.setContext(getApplicationContext())
+										.setAudioEncoder(
+												audioEnable ? audioEncoder : 0)
+										.setVideoQuality(videoQuality)
+										.setAudioQuality(
+												new AudioQuality(8000, 32000))
+										.setVideoEncoder(
+												videoEnable ? videoEncoder : 0)
+										.setOrigin("127.0.0.0")
+										.setDestination(mAddress)
+										.setSurfaceView(mSurfaceView)
+										.setPreviewOrientation(0)
+										.setCallback(MainActivity.this).build();
+							}
+
+							if (mClient == null) {
+								// Configures the RTSP client
+								mClient = new RtspClient();
+								/*
+								 * String tranport = preferences.getString(
+								 * EasyCameraApp.KEY_TRANPORT, "0"); if
+								 * ("0".equals(tranport)) {
+								 * mClient.setTransportMode
+								 * (RtspClient.TRANSPORT_TCP); } else {
+								 * mClient.setTransportMode
+								 * (RtspClient.TRANSPORT_UDP); }
+								 */
+								mClient.setTransportMode(RtspClient.TRANSPORT_TCP);
+								mClient.setSession(mSession);
+								mClient.setCallback(MainActivity.this);
+							}
+
+							mClient.setCredentials("", "");
+							mClient.setServerAddress(mAddress,
+									Integer.parseInt(mPort));
+							mClient.setStreamPath(String.format("/%s.sdp",
+									preferences.getString("key_device_id",
+											Build.MODEL)));
+							/*
+							 * IMPORTANT开始推流
+							 */
+							mClient.startStream();
+							return 0;
+						}
+
+					}.execute();
+
+				}
+			}
+		});
+
+		btnOption = (Button) findViewById(R.id.btnOptions);
+		btnOption.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				// toSeting = true;
+				Intent intent = new Intent(MainActivity.this,
+						SettingsActivity.class);
+				startActivityForResult(intent, REQUEST_SETTING);
+			}
+		});
+
+	}
+
+	private void stopStream() {
+		if (mClient != null) {
+			mClient.release();
+			mClient = null;
+		}
+
+		if (mSession != null) {
+			mSession.release();
+			mSession = null;
+		}
+
+		mSurfaceView.getHolder().removeCallback(MainActivity.this);
+		mSurfaceView.setVisibility(View.GONE);
+		mSurfaceView.setVisibility(View.VISIBLE);
+		mSurfaceView.getHolder().addCallback(MainActivity.this);
+	}
+
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		getMenuInflater().inflate(R.menu.main, menu);
+		return true;
+	}
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		// Handle action bar item clicks here. The action bar will
+		// automatically handle clicks on the Home/Up button, so long
+		// as you specify a parent activity in AndroidManifest.xml.
+		int id = item.getItemId();
+		if (id == R.id.action_settings) {
+			startActivityForResult(new Intent(this, SettingsActivity.class),
+					REQUEST_SETTING);
+			return true;
+		}
+		return super.onOptionsItemSelected(item);
+	}
+
+	private void setStateDescription(byte state) {
+
+		switch (state) {
+		case EasyCameraApp.STATE_DISCONNECTED:
+			ipView.setText(null);
+			break;
+		case EasyCameraApp.STATE_CONNECTED:
+			ipView.setText(String.format(
+					"Input this URL in VLC player:\nrtsp://%s:%d/%s.sdp",
+					mAddress, mPort, mDeviceId));
+			break;
+		case EasyCameraApp.STATE_CONNECTING:
+			ipView.setText(null);
+			break;
+		default:
+			break;
+		}
+	}
+
+	@Override
+	public void onBitrareUpdate(long bitrate) {
+		if (mClient != null) {
+
+			ipView.setText("" + bitrate / 1000 + " kbps");
+		}
+	}
+
+	@Override
+	public void onRtspUpdate(int message, Exception exception) {
+		if (message == RtpThread.WHAT_THREAD_END_UNEXCEPTION) {
+			runOnUiThread(new Runnable() {
+
+				@Override
+				public void run() {
+
+					btnPlay.setBackgroundResource(R.drawable.pause);
+					alive = true;
+					stopStream();
+					ipView.setText("Disconnect with server，stop transfer");
+
+				}
+			});
+		}
+	}
+
+	@Override
+	public void surfaceDestroyed(SurfaceHolder holder) {
+		if (mReceiver != null) {
+			LocalBroadcastManager.getInstance(MainActivity.this)
+					.unregisterReceiver(mReceiver);
+			mReceiver = null;
+		}
+		if (mClient != null) {
+			mClient.release();
+			mClient = null;
+		}
+
+		if (mSession != null) {
+			mSession.release();
+			mSession = null;
+		}
+	}
+
+	@Override
+	public void surfaceCreated(final SurfaceHolder holder) {// Configures the
+		// SessionBuilder 需要这个在重新设置吗？
+
+		mReceiver = new BroadcastReceiver() {
+
+			@Override
+			public void onReceive(Context context, Intent intent) {
+				if (EasyCameraApp.ACTION_COMMOND_STATE_CHANGED.equals(intent
+						.getAction())) {
+					byte state = intent.getByteExtra(EasyCameraApp.KEY_STATE,
+							EasyCameraApp.STATE_DISCONNECTED);
+					// setStateDescription(state);
+
+					if (state == EasyCameraApp.STATE_CONNECTED) {
+						ipView.setText(String.format("rtsp://%s:%d/%s.sdp",
+								mAddress, Integer.parseInt(mPort), mDeviceId));
+					}
+
+				} else {
+					if ("REDIRECT".equals(intent.getAction())) {
+						String location = intent.getStringExtra("location");
+						if (!TextUtils.isEmpty(location)) {
+							// ======================
+						}
+					} else if ("PAUSE".equals(intent.getAction())) {
+						// ==========================
+					} else if (ConnectivityManager.CONNECTIVITY_ACTION
+							.equals(intent.getAction())) {
+						boolean success = false;
+						// 获得网络连接服务
+						ConnectivityManager connManager = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
+						// State state =
+						// connManager.getActiveNetworkInfo().getState();
+						State state = connManager.getNetworkInfo(
+								ConnectivityManager.TYPE_WIFI).getState(); // 获取网络连接状态
+						if (State.CONNECTED == state) { // 判断是否正在使用WIFI网络
+							success = true;
+						}
+						state = connManager.getNetworkInfo(
+								ConnectivityManager.TYPE_MOBILE).getState(); // 获取网络连接状态
+						if (State.CONNECTED != state) { // 判断是否正在使用GPRS网络
+							success = true;
+						}
+						if (success) {
+							// startService(new Intent(MainActivity.this,
+							// CommandService.class));
+							ipView.setText(String.format("rtsp://%s:%d/%s.sdp",
+									mAddress, Integer.parseInt(mPort),
+									mDeviceId));
+						}
+					}
+				}
+			}
+
+		};
+
+		ConnectivityManager cm = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
+		NetworkInfo info = cm.getActiveNetworkInfo();
+		if (info != null && info.isConnected()) {
+			SharedPreferences pref = PreferenceManager
+					.getDefaultSharedPreferences(MainActivity.this);
+
+			mAddress = pref.getString("key_server_address", null);
+			mPort = pref.getString("key_server_port", null);
+			mDeviceId = pref.getString("key_device_id", null);
+			boolean bParamInvalid = (TextUtils.isEmpty(mAddress)
+					|| TextUtils.isEmpty(mPort) || TextUtils.isEmpty(mDeviceId));
+			if (!bParamInvalid) {
+				// startService(new Intent(this, CommandService.class));
+				//
+				// IntentFilter inf = new
+				// IntentFilter(EasyCameraApp.ACTION_COMMOND_STATE_CHANGED);
+				// inf.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
+				// inf.addAction("REDIRECT");
+				// inf.addAction("PAUSE");
+				// LocalBroadcastManager.getInstance(MainActivity.this).registerReceiver(mReceiver,
+				// inf);
+				// setStateDescription(EasyCameraApp.sState);
+			}
+		} else {
+
+			ipView.setText("Network is unavailable,please open the network and try again");
+		}
+
+	}
+
+	public class CurrentTimeThread extends Thread {
+
+		@Override
+		public void run() {
+			do {
+				try {
+					Thread.sleep(1000);
+					Message msg = new Message();
+					msg.what = msgKey1;
+					mHandler.sendMessage(msg);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			} while (alive);
+		}
+
+		private Handler mHandler = new Handler() {
+			@Override
+			public void handleMessage(Message msg) {
+				super.handleMessage(msg);
+				switch (msg.what) {
+				case msgKey1:
+					Calendar c = Calendar.getInstance();
+					String curDateTime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(c.getTime());
+					mTime.setText(curDateTime);
+					break;
+
+				default:
+					break;
+				}
+			}
+		};
+	}
+
+	@Override
+	public void surfaceChanged(SurfaceHolder holder, int format, int width,
+			int height) {
+	}
+
+	@Override
+	public void onSessionError(int reason, int streamType, Exception e) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void onPreviewStarted() {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void onSessionConfigured() {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void onSessionStarted() {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void onSessionStopped() {
+		// TODO Auto-generated method stub
+
+	}
+}
