@@ -141,8 +141,10 @@ public class VideoStreamingActivity extends Activity implements Callback,
 	private List<Map<String, String>> friendList;
 	private boolean messageFlag = true;
 	private XMPPConnection connection;
-	private String streaminglink = "http://129.128.184.46:8554/live.sdp";
-
+	private String streaminglink = "rtsp://129.128.184.46:8554/";
+	private String curDateTime;
+	String to = "admin@myria";
+	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -172,7 +174,10 @@ public class VideoStreamingActivity extends Activity implements Callback,
 		// }
 
 		initView();
-
+		curDateTime = new SimpleDateFormat(
+				"yyyy_MM_dd_HH_mm_ss").format(Calendar.getInstance().getTime());
+		streaminglink = streaminglink + getDefaultDeviceId()+ curDateTime + ".sdp";
+		System.out.println(streaminglink);
 		boolean bParamInvalid = (TextUtils.isEmpty(mAddress)
 				|| TextUtils.isEmpty(mPort) || TextUtils.isEmpty(mVideoName));
 		if (EasyCameraApp.sState != EasyCameraApp.STATE_DISCONNECTED) {
@@ -182,11 +187,13 @@ public class VideoStreamingActivity extends Activity implements Callback,
 			startActivityForResult(new Intent(this, SettingsActivity.class),
 					REQUEST_SETTING);
 		} else {
-			streaminglink = String.format("rtsp://%s:%d/%s.sdp", mAddress,
-					Integer.parseInt(mPort), mVideoName);
+//			streaminglink = String.format("rtsp://%s:%d/%s.sdp", mAddress,
+//					Integer.parseInt(mPort), mVideoName);
 			ipView.setText(String.format("rtsp://%s:%d/%s.sdp", mAddress,
 					Integer.parseInt(mPort), mVideoName));
+			
 		}
+		//ipView.setText(streaminglink);
 
 		/** TODO================================================================ */
 
@@ -209,7 +216,7 @@ public class VideoStreamingActivity extends Activity implements Callback,
 
 		mAddress = preferences.getString("key_server_address", null);
 		mPort = preferences.getString("key_server_port", null);
-		mVideoName = preferences.getString("key_device_id",null/*	EasyCameraApp.getDefaultDeviceId()*/);
+		mVideoName = preferences.getString("key_device_id",null/*getDefaultDeviceId()*/);
 		ipView = (TextView) findViewById(R.id.main_text_description);
 		mTime = (TextView) findViewById(R.id.timeDisplay);
 
@@ -267,7 +274,7 @@ public class VideoStreamingActivity extends Activity implements Callback,
 
 			break;
 		case R.id.btn_send_message:
-			String to = "admin@myria";
+//			String to = "admin@myria";
 			String text = textMessage.getText().toString();
 			if(!text.equals("")&&text!=null){
 				Log.i("XMPPChatDemoActivity", "Sending text " + text + " to " + to);
@@ -301,9 +308,7 @@ public class VideoStreamingActivity extends Activity implements Callback,
 		for (String entry : entryList) {
 
 			Map<String, String> map = new HashMap<String, String>();
-
 			String[] s = entry.toString().split(" ");
-
 			if (s.length == 2) {
 				map.put("name", s[0].substring(0, s[0].length() - 1));
 				map.put("username", s[1]);
@@ -391,11 +396,11 @@ public class VideoStreamingActivity extends Activity implements Callback,
 
 				mClient.setCredentials("", "");
 				mClient.setServerAddress(mAddress, Integer.parseInt(mPort));
-				mClient.setStreamPath(String.format("/%s.sdp",
-						preferences.getString("key_device_id", Build.MODEL)));
+				mClient.setStreamPath(String.format("/%s.sdp",preferences.getString("key_device_id", Build.MODEL)));
+				mClient.setStreamPath(String.format("/%s.sdp",getDefaultDeviceId()+curDateTime));
+				
 				/**
-				 * IMPORTANT, start push stream.
-				 */
+				 * IMPORTANT, start push stream.*/
 				mClient.startStream();
 				return 0;
 			}
@@ -571,13 +576,7 @@ public class VideoStreamingActivity extends Activity implements Callback,
 				Log.i("PLAY", "following should be streainglink====");
 				if (popFriends != null)
 					popFriends.dismiss();
-				// keep connection
-				// try {
-				// connection.connect();
-				// } catch (XMPPException e) {
-				// // TODO Auto-generated catch block
-				// e.printStackTrace();
-				// }
+
 				mHandler.post(new Runnable() {
 					public void run() {
 						for (int i = 0; i < selectedListMap.size(); i++) {
@@ -657,7 +656,7 @@ public class VideoStreamingActivity extends Activity implements Callback,
 						mHandler.post(new Runnable() {
 							public void run() {
 								// notification or chat...
-								if (msg.contains("rtsp://129.128.184.46/"))	
+								if (msg.contains("rtsp://129.128.184.46:8554/")/*equals(streaminglink)*/)	
 									popupReceiveStreamingLinkMessage(msg);
 								else 
 									Toast.makeText(getApplicationContext(),
@@ -1004,6 +1003,14 @@ public class VideoStreamingActivity extends Activity implements Callback,
 		}
 	};
 
+	public String getDefaultDeviceId() {
+		return Build.MODEL.replaceAll(" ", "_");
+	}
+	
+	/**
+	 * Configure the provider manager
+	 * @param pm
+	 */
 	public void configureProviderManager(ProviderManager pm) {
 
 		// Private Data Storage
