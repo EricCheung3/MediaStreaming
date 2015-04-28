@@ -85,6 +85,7 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.Gravity;
+import android.view.KeyEvent;
 import android.view.MenuItem;
 import android.view.SurfaceHolder;
 import android.view.View;
@@ -99,6 +100,7 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.PopupWindow;
 import android.widget.TextView;
+import android.widget.TextView.OnEditorActionListener;
 import android.widget.Toast;
 
 public class VideoStreamingActivity extends Activity implements Callback,
@@ -197,7 +199,7 @@ public class VideoStreamingActivity extends Activity implements Callback,
 
 		/** TODO================================================================ */
 
-		//connection = GetConnection(username, password);
+//		connection = GetConnection(username, password);
 		new GetXMPPConnection().execute();
 		// Set the status to available
 //		Presence presence = new Presence(Presence.Type.available);
@@ -205,10 +207,40 @@ public class VideoStreamingActivity extends Activity implements Callback,
 //		// get message listener
 //		ReceiveMsgListenerConnection(connection);
 		// (new ReceiveMessageThread()).start();
+		
 
+		
 		btnSelectContact.setOnClickListener(this);
 		btnOption.setOnClickListener(this);
 		btnStop.setOnClickListener(this);
+		// EditText: set android keyboard enter button as send button
+		
+		textMessage.setOnEditorActionListener(new OnEditorActionListener() {
+		    
+		    @Override
+		    public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+//				String to = "admin@myria";
+				String text = textMessage.getText().toString();
+				if(!text.equals("")&&text!=null){
+					Log.i("XMPPChatDemoActivity", "Sending text " + text + " to " + to);
+					Message msg = new Message(to, Message.Type.chat);
+					msg.setBody(text);
+					if (connection != null) {
+						connection.sendPacket(msg);
+						messages.add(connection.getUser().split("@")[0] + ":");
+						messages.add(text);
+						Toast.makeText(getApplicationContext(), text,
+								Toast.LENGTH_SHORT).show();
+					}
+					textMessage.setText("");
+				}else{
+					Toast.makeText(getApplicationContext(), "The input cannot be null!",
+							Toast.LENGTH_SHORT).show();
+				}
+				return true;	    	
+		    }
+		});
+		
 		btnSendMessage.setOnClickListener(this);
 	}
 
@@ -1007,6 +1039,71 @@ public class VideoStreamingActivity extends Activity implements Callback,
 		return Build.MODEL.replaceAll(" ", "_");
 	}
 	
+	
+	// create a multi-user chat room & invite them to join
+	public boolean createMultiUserRoom(XMPPConnection connection,
+			String roomName/*, ArrayList<String> friendlist*/) {
+
+		if(connection==null)
+			return false;
+		// Get the MultiUserChatManager
+		// Create a MultiUserChat using an XMPPConnection for a room
+		MultiUserChat muc = new MultiUserChat(connection, roomName
+				+ "@conference.myria");
+
+		try {
+
+			// Create the room
+			muc.create(roomName);
+
+			// Get the the room's configuration form
+			Form form = muc.getConfigurationForm();
+			// Create a new form to submit based on the original form
+			Form submitForm = form.createAnswerForm();
+			// Add default answers to the form to submit
+			for (Iterator fields = form.getFields(); fields.hasNext();) {
+				FormField field = (FormField) fields.next();
+				if (!FormField.TYPE_HIDDEN.equals(field.getType())
+						&& field.getVariable() != null) {
+					// Sets the default value as the answer
+					submitForm.setDefaultAnswer(field.getVariable());
+				}
+			}
+
+			// configure the room
+			// 设置聊天室是持久聊天室，即将要被保存下来  
+	        submitForm.setAnswer("muc#roomconfig_persistentroom", false);  
+	        // 房间仅对成员开放  
+	        submitForm.setAnswer("muc#roomconfig_membersonly", false);  
+	        // 允许占有者邀请其他人  
+	        submitForm.setAnswer("muc#roomconfig_allowinvites", true);  
+	        // 进入是否需要密码  
+	        //submitForm.setAnswer("muc#roomconfig_passwordprotectedroom", false);  
+
+	        // 登录房间对话  
+	        submitForm.setAnswer("muc#roomconfig_enablelogging", true);  
+	        // 仅允许注册的昵称登录  
+	        submitForm.setAnswer("x-muc#roomconfig_reservednick", true);  
+	        // 允许使用者修改昵称  
+	        submitForm.setAnswer("x-muc#roomconfig_canchangenick", true);  
+	        // 允许用户注册房间  
+	        submitForm.setAnswer("x-muc#roomconfig_registration", false);  
+	        // 发送已完成的表单（有默认值）到服务器来配置聊天室  
+	        submitForm.setAnswer("muc#roomconfig_passwordprotectedroom", true);
+	        
+			muc.sendConfigurationForm(submitForm);
+			// Create a MultiUserChat using an XMPPConnection for a room
+			
+			//muc.invite("user11@myria", "come baby");
+			muc.join(muc.getNickname());
+
+			return true;
+		} catch (XMPPException e) {
+			e.printStackTrace();
+		}
+
+		return false;
+	}
 	/**
 	 * Configure the provider manager
 	 * @param pm
@@ -1206,6 +1303,7 @@ public class VideoStreamingActivity extends Activity implements Callback,
 		}
 	}
 
+	@SuppressWarnings("rawtypes")
 	private class GetXMPPConnection extends AsyncTask {
 		@Override
 		protected XMPPConnection doInBackground(Object... urls) {
@@ -1228,8 +1326,18 @@ public class VideoStreamingActivity extends Activity implements Callback,
 					connection.sendPacket(presence);
 					// get message listener
 					ReceiveMsgListenerConnection(connection);
-					return connection;
+					
 				}
+//				MultiUserChat muc = new MultiUserChat(connection, "room3"
+//						+ "@conference.myria");
+//				muc.join("aaaaaa");
+				
+//				if(createMultiUserRoom(connection,"room3"))
+//					Log.i("createMultiUserRoom","sucess");
+//				else
+//					Log.i("createMultiUserRoom","failure");
+				
+				return connection;
 			} catch (XMPPException e) {
 				e.printStackTrace();
 			}

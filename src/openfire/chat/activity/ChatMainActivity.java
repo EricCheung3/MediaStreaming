@@ -154,7 +154,7 @@ public class ChatMainActivity extends Activity {
 			@Override
 			public void onClick(View arg0) {
 				// TODO Auto-generated method stub
-				if (createMultiUserRoom(connection, "room2", selectedListMap)) {
+				if (createMultiUserRoom(connection, "room2"/*, selectedListMap*/)) {
 					Log.i("createMultiUserRoom", "success");
 				} else
 					Log.i("createMultiUserRoom", "not success");
@@ -373,7 +373,7 @@ public class ChatMainActivity extends Activity {
 
 	// create a multi-user chat room & invite them to join
 	public boolean createMultiUserRoom(XMPPConnection connection,
-			String roomName, ArrayList<String> friendlist) {
+			String roomName/*, ArrayList<String> friendlist*/) {
 
 		// Get the MultiUserChatManager
 		// Create a MultiUserChat using an XMPPConnection for a room
@@ -404,7 +404,7 @@ public class ChatMainActivity extends Activity {
 			// Create a MultiUserChat using an XMPPConnection for a room
 
 			muc.invite("user11@myria", "come baby");
-
+			muc.join("user11@myria");
 			return true;
 		} catch (XMPPException e) {
 			e.printStackTrace();

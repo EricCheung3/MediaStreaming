@@ -22,7 +22,7 @@ import android.util.Log;
 
 public class UserServiceImpl implements UserService {
 
-	public static int SERVER_PORT = 5220; //server port
+	public static final int SERVER_PORT = 5220; //server port
 	public static String SERVER_HOST = "129.128.184.46";// server ip
 	public static String SERVER_NAME = "myria";// server name
 	private static XMPPConnection connection = null;
