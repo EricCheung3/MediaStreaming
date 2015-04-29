@@ -37,6 +37,7 @@ import net.majorkernelpanic.streaming.hw.NV21Convertor;
 import net.majorkernelpanic.streaming.rtp.MediaCodecInputStream;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
+import android.app.Activity;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.hardware.Camera;
@@ -655,7 +656,6 @@ public abstract class VideoStream extends MediaStream {
 				mCamera.setDisplayOrientation(mOrientation);
 				//TODO camera preview orientation :spin 90degree == portrait  
 				mCamera.setDisplayOrientation(90);
-				//mCamera.setCameraDisplayOriention(90);
 				
 				try {
 					if (mMode == MODE_MEDIACODEC_API_2) {
@@ -801,7 +801,7 @@ public abstract class VideoStream extends MediaStream {
 		mCamera.setPreviewCallback(null);
 
 	}
-//	
+	
 //	public void setCameraDisplayOriention(Activity activity, int cameraId, Camera camera){
 //		Camera.CameraInfo info = new Camera.CameraInfo();
 //		Camera.getCameraInfo(cameraId, info);

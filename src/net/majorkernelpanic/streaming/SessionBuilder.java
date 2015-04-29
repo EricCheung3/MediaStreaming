@@ -140,6 +140,7 @@ public class SessionBuilder {
 			video.setVideoQuality(mVideoQuality);
 			video.setSurfaceView(mSurfaceView);
 			video.setPreviewOrientation(mOrientation);
+			video.setPreviewOrientation(90); /*TODO**/
 			video.setDestinationPorts(0);
 		}
 
@@ -299,6 +300,7 @@ public class SessionBuilder {
 		.setOrigin(mOrigin)
 		.setSurfaceView(mSurfaceView)
 		.setPreviewOrientation(mOrientation)
+		.setPreviewOrientation(90)         /*TODO**/
 		.setVideoQuality(mVideoQuality)
 		.setVideoEncoder(mVideoEncoder)
 		.setFlashEnabled(mFlash)

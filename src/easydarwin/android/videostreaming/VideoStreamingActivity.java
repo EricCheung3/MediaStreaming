@@ -71,6 +71,9 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.content.res.Configuration;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.Paint.Style;
 import android.graphics.drawable.BitmapDrawable;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -87,9 +90,11 @@ import android.util.Log;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.View.OnTouchListener;
 import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
@@ -124,7 +129,7 @@ public class VideoStreamingActivity extends Activity implements Callback,
 	public int audioEncoder = SessionBuilder.AUDIO_AMRNB;
 	/** By default H.264 is the video encoder. */
 	public int videoEncoder = SessionBuilder.VIDEO_H264;
-
+	private static final int mOrientation = 0;
 	private Button btnOption;
 	private Button btnSelectContact;
 	private Button btnStop;
@@ -145,8 +150,13 @@ public class VideoStreamingActivity extends Activity implements Callback,
 	private XMPPConnection connection;
 	private String streaminglink = "rtsp://129.128.184.46:8554/";
 	private String curDateTime;
-	String to = "admin@myria";
-	
+	private String to = "admin@myria";
+
+
+	//===============
+//	 private final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+	private PaintView paintView;
+	 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -213,8 +223,8 @@ public class VideoStreamingActivity extends Activity implements Callback,
 		btnSelectContact.setOnClickListener(this);
 		btnOption.setOnClickListener(this);
 		btnStop.setOnClickListener(this);
+		btnSendMessage.setOnClickListener(this);
 		// EditText: set android keyboard enter button as send button
-		
 		textMessage.setOnEditorActionListener(new OnEditorActionListener() {
 		    
 		    @Override
@@ -240,8 +250,20 @@ public class VideoStreamingActivity extends Activity implements Callback,
 				return true;	    	
 		    }
 		});
+
+//		mSurfaceView.setOnTouchListener(mSurfaceView);
+
 		
-		btnSendMessage.setOnClickListener(this);
+//		mSurfaceView.setOnTouchListener(new OnTouchListener(){
+//
+//			@Override
+//			public boolean onTouch(View arg0, MotionEvent arg1) {
+//				// TODO Auto-generated method stub
+//				Log.i("mSurfaceView","touch screen");
+//				setContentView(new DrawingView(VideoStreamingActivity.this));
+//				return false;
+//			}
+//		});
 	}
 
 	public void initView() {
@@ -251,7 +273,9 @@ public class VideoStreamingActivity extends Activity implements Callback,
 		mVideoName = preferences.getString("key_device_id",null/*getDefaultDeviceId()*/);
 		ipView = (TextView) findViewById(R.id.main_text_description);
 		mTime = (TextView) findViewById(R.id.timeDisplay);
-
+		// draw paint View
+		paintView = (PaintView)findViewById(R.id.drawView);
+		
 		mSurfaceView = (net.majorkernelpanic.streaming.gl.SurfaceView) findViewById(R.id.surface);
 		mSurfaceView.setAspectRatioMode(SurfaceView.ASPECT_RATIO_PREVIEW);
 		surfaceHolder = mSurfaceView.getHolder();
@@ -358,9 +382,12 @@ public class VideoStreamingActivity extends Activity implements Callback,
 	/**
 	 * start video streaming function
 	 */
-	private void PLAY() {
+	private void PLAYVideoStreaming() {
 		preferences = PreferenceManager.getDefaultSharedPreferences(this);
-
+		
+		/**draw a circle when user touch the screen*/
+		paintView.setOnTouchListener(paintView);
+		
 		new AsyncTask<Void, Void, Integer>() {
 			@Override
 			protected void onProgressUpdate(Void... values) {
@@ -388,7 +415,7 @@ public class VideoStreamingActivity extends Activity implements Callback,
 							"p_video_encoder", String.valueOf(videoEncoder)));
 
 					Matcher matcher = pattern.matcher(preferences.getString(
-							"video_resolution", "320x240"));
+							"video_resolution", "640x480"));
 					matcher.find();
 
 					videoQuality = new VideoQuality(Integer.parseInt(matcher
@@ -405,7 +432,7 @@ public class VideoStreamingActivity extends Activity implements Callback,
 							.setVideoEncoder(videoEnable ? videoEncoder : 0)
 							.setOrigin("127.0.0.0").setDestination(mAddress)
 							.setSurfaceView(mSurfaceView)
-							 .setPreviewOrientation(0)
+							.setPreviewOrientation(mOrientation)
 							.setCallback(VideoStreamingActivity.this).build();
 				}
 
@@ -454,6 +481,7 @@ public class VideoStreamingActivity extends Activity implements Callback,
 			mSession = null;
 		}
 
+		paintView.setVisibility(View.GONE);
 		// mSurfaceView.getHolder().removeCallback(MainActivity.this);
 		// mSurfaceView.setVisibility(View.GONE);
 		// mSurfaceView.setVisibility(View.VISIBLE);
@@ -604,7 +632,7 @@ public class VideoStreamingActivity extends Activity implements Callback,
 		btn_Send.setOnClickListener(new View.OnClickListener() {
 			public void onClick(View view) {
 				// START TO PUSH VIDEO
-				PLAY();
+				PLAYVideoStreaming();
 				Log.i("PLAY", "following should be streainglink====");
 				if (popFriends != null)
 					popFriends.dismiss();
@@ -1297,7 +1325,7 @@ public class VideoStreamingActivity extends Activity implements Callback,
 		super.onConfigurationChanged(newConfig);
 		if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
 			// nothing to do
-
+			
 		} else {
 			// nothing to do
 		}
@@ -1345,4 +1373,7 @@ public class VideoStreamingActivity extends Activity implements Callback,
 			return connection;
 		}
 	}
+
+	
+	//Requested audio with 32kbps at 8kHz
 }

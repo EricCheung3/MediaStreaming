@@ -26,12 +26,19 @@ import net.majorkernelpanic.streaming.MediaStream;
 import net.majorkernelpanic.streaming.video.VideoStream;
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.Paint.Style;
 import android.graphics.SurfaceTexture;
 import android.os.Handler;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.Surface;
 import android.view.SurfaceHolder;
+import android.view.View;
+import android.view.View.OnTouchListener;
 
 /**
  * An enhanced SurfaceView in which the camera preview will be rendered. 
@@ -51,7 +58,7 @@ import android.view.SurfaceHolder;
  * {@link SurfaceView}. <br />
  * 
  */
-public class SurfaceView extends android.view.SurfaceView implements Runnable, SurfaceHolder.Callback {
+public class SurfaceView extends android.view.SurfaceView implements Runnable, SurfaceHolder.Callback /*,OnTouchListener */{
 
 	public final static String TAG = "GLSurfaceView";
 
@@ -86,10 +93,17 @@ public class SurfaceView extends android.view.SurfaceView implements Runnable, S
 	// Allows to force the aspect ratio of the preview
 	private ViewAspectRatioMeasurer mVARM = new ViewAspectRatioMeasurer();
 	
+//    private SurfaceHolder surfaceHolder;
+//    private Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    
 	public SurfaceView(Context context, AttributeSet attrs) {
 		super(context, attrs);
 		mHandler = new Handler();
 		getHolder().addCallback(this);
+		/**for touch event */
+//		surfaceHolder = getHolder();
+//        paint.setColor(Color.RED);
+//        paint.setStyle(Style.STROKE);
 	}	
 
 	public void setAspectRatioMode(int mode) {
@@ -160,7 +174,7 @@ public class SurfaceView extends android.view.SurfaceView implements Runnable, S
 							mCodecSurfaceManager.setPresentationTime(ts);
 							mCodecSurfaceManager.swapBuffer();
 						}
-
+						
 					} else {
 						Log.e(TAG,"No frame received !");
 					}
@@ -329,5 +343,32 @@ public class SurfaceView extends android.view.SurfaceView implements Runnable, S
 		}
 
 	}
-
+	
+	
+	 public void Draw(Canvas canvas) {
+	  super.draw(canvas);
+	  // nothing gets drawn :(
+	  Paint p = new Paint(Color.RED);
+	  canvas.drawText("PREVIEW", canvas.getWidth() / 2, canvas.getHeight() / 2, p);
+	  System.out.println("draw..........");
+	 }
+	/*
+	private Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+	float mX;
+	float mY;	
+	
+	@Override
+	public boolean onTouch(View v, MotionEvent event) {
+		switch(event.getAction()){
+			// When user touches the screen
+			case MotionEvent.ACTION_DOWN:
+				// Getting X coordinate
+				mX = event.getX();				
+				mY = event.getY();	
+				System.out.println("onTouch..........");
+				break;
+		}
+		return true;
+	}
+*/
 }

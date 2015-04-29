@@ -297,7 +297,7 @@ public class RtspClient {
 				try {
 					mParameters.session.syncStart();
 					mState = STATE_STARTED;
-					// 因为udp不是一个通道，如果命令通道断开了，是检测不到的，因此这里相当于保活
+					// // keep alive (因为udp不是一个通道，如果命令通道断开了，是检测不到的，因此这里相当于保活)
 					if (mParameters.transport == TRANSPORT_UDP) {
 						mHandler.post(mConnectionMonitor);
 					}
@@ -316,7 +316,7 @@ public class RtspClient {
 				if (mRtpThread == null) {
 					mRtpThread = new RtpThread(mParameters.host, mParameters.port);
 					/**
-					 * 异常结束时，会通过参数发送WHAT_THREAD_END_UNEXCEPTION消息
+					 * if exception happens, send WHAT_THREAD_END_UNEXCEPTION message to handler
 					 */
 					mRtpThread.start(mHandler);
 				}

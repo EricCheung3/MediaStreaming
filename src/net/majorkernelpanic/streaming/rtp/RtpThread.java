@@ -26,7 +26,7 @@ public class RtpThread extends Thread {
 	private boolean mStoped = false;
 
 	/**
-	 * 存储read之后的数据（flip之后）
+	 * Store the data which after reading（after flip）
 	 */
 	private ArrayBlockingQueue<ByteBuffer> mReadQueue = new ArrayBlockingQueue<ByteBuffer>(READ_QUEUE_CAPACITY);
 	private ArrayBlockingQueue<ByteBuffer> mWriteQueue = new ArrayBlockingQueue<ByteBuffer>(50);
@@ -216,7 +216,7 @@ public class RtpThread extends Thread {
 		ByteBuffer buffer = available(1024);
 		buffer.clear();
 		int result = 0;
-		do { // 如果当前包不够长，则扩张继续读直到读完
+		do { // 
 			if (!buffer.hasRemaining()) {
 				buffer.clear();
 				ByteBuffer newBuffer = ByteBuffer.allocate(buffer.capacity() * 2);

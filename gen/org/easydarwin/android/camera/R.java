@@ -98,17 +98,17 @@ or to a theme attribute in the form "<code>?[<i>package</i>:][<i>type</i>:]<i>na
         public static final int top_back_left=0x7f020012;
     }
     public static final class id {
-        public static final int action_settings=0x7f0c002c;
+        public static final int action_settings=0x7f0c002d;
         public static final int btnCreateRoom=0x7f0c0016;
-        public static final int btnOptions=0x7f0c0025;
-        public static final int btnPlay=0x7f0c0026;
-        public static final int btnStop=0x7f0c0027;
+        public static final int btnOptions=0x7f0c0026;
+        public static final int btnPlay=0x7f0c0027;
+        public static final int btnStop=0x7f0c0028;
         public static final int btn_Cancel=0x7f0c0004;
         public static final int btn_OK_PLAY=0x7f0c0003;
-        public static final int btn_cancle=0x7f0c002b;
+        public static final int btn_cancle=0x7f0c002c;
         public static final int btn_login=0x7f0c0010;
         public static final int btn_play=0x7f0c0008;
-        public static final int btn_play_streaming=0x7f0c002a;
+        public static final int btn_play_streaming=0x7f0c002b;
         public static final int btn_register=0x7f0c0012;
         public static final int btn_reset=0x7f0c0021;
         public static final int btn_send_cancel=0x7f0c0009;
@@ -117,6 +117,7 @@ or to a theme attribute in the form "<code>?[<i>package</i>:][<i>type</i>:]<i>na
         public static final int check_box=0x7f0c0001;
         public static final int contactList=0x7f0c0002;
         public static final int contactName=0x7f0c0000;
+        public static final int drawView=0x7f0c0023;
         public static final int edit_confirmPassword=0x7f0c0020;
         public static final int edit_email=0x7f0c001f;
         public static final int edit_name=0x7f0c001e;
@@ -128,20 +129,20 @@ or to a theme attribute in the form "<code>?[<i>package</i>:][<i>type</i>:]<i>na
         public static final int friendlist=0x7f0c0007;
         public static final int imageView=0x7f0c001b;
         public static final int linear1=0x7f0c000c;
-        public static final int linear2=0x7f0c0028;
+        public static final int linear2=0x7f0c0029;
         public static final int linearLayout2=0x7f0c0017;
         public static final int listMessages=0x7f0c0015;
         public static final int loginRoot=0x7f0c000b;
-        public static final int main_text_description=0x7f0c0024;
+        public static final int main_text_description=0x7f0c0025;
         public static final int reg_back_btn=0x7f0c001c;
         public static final int registerInfo=0x7f0c0013;
         public static final int relativelayout2=0x7f0c000d;
-        public static final int streaming_link=0x7f0c0029;
+        public static final int streaming_link=0x7f0c002a;
         public static final int surface=0x7f0c0022;
         public static final int text1=0x7f0c000a;
         public static final int textView=0x7f0c001a;
         public static final int textView2=0x7f0c001d;
-        public static final int timeDisplay=0x7f0c0023;
+        public static final int timeDisplay=0x7f0c0024;
         public static final int toET=0x7f0c0014;
     }
     public static final class layout {
