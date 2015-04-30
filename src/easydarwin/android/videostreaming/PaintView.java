@@ -5,6 +5,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Paint.Style;
+import android.graphics.RectF;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
@@ -16,15 +17,13 @@ public class PaintView extends View implements OnTouchListener{
 	Paint mPaint;
 	float mX;
 	float mY;	
-	TextView mTVCoordinates;
 	
 	public PaintView(Context context,AttributeSet attributeSet){
 		super(context,attributeSet);
-		
+	
 		/** Initializing the variables */
 		mPaint = new Paint();
 		mX = mY = -100;
-		mTVCoordinates = null;
 	}
 	
 	@Override
@@ -32,19 +31,15 @@ public class PaintView extends View implements OnTouchListener{
 		super.onDraw(canvas);
 		
 		// Setting the color of the circle
-		mPaint.setColor(Color.GREEN);
+		mPaint.setColor(Color.YELLOW);
 		mPaint.setStyle(Style.STROKE);
+//        RectF oval = new RectF(mX, mY, 60, 80);  
+//        canvas.drawOval(oval, mPaint);  
 		// Draw the circle at (x,y) with radius 60
-		canvas.drawCircle(mX, mY, 60, mPaint);
-		
+		canvas.drawCircle(mX, mY, 60, mPaint);	
+
 		// Redraw the canvas
-		invalidate();	
-		
-	}
-	
-	public void setTextView(TextView tv){
-		// Reference to TextView Object
-		mTVCoordinates = tv;		
+		invalidate();			
 	}
 
 	@Override
@@ -52,17 +47,10 @@ public class PaintView extends View implements OnTouchListener{
 		switch(event.getAction()){
 			// When user touches the screen
 			case MotionEvent.ACTION_DOWN:
-				// Getting X coordinate
+				// Getting X,Y coordinate
 				mX = event.getX();
-				
-				// Getting Y Coordinate
 				mY = event.getY();
-				
-				// Setting the coordinates on TextView
-				if(mTVCoordinates!=null){
-					mTVCoordinates.setText("X :" + mX + " , " + "Y :" + mY);
-				}
-				
+				break;
 		}
 		return true;
 	}

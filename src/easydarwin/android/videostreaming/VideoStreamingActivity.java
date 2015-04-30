@@ -151,10 +151,7 @@ public class VideoStreamingActivity extends Activity implements Callback,
 	private String streaminglink = "rtsp://129.128.184.46:8554/";
 	private String curDateTime;
 	private String to = "admin@myria";
-
-
-	//===============
-//	 private final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+	/** draw a circle when touch the screen */
 	private PaintView paintView;
 	 
 	@Override
@@ -205,7 +202,7 @@ public class VideoStreamingActivity extends Activity implements Callback,
 					Integer.parseInt(mPort), mVideoName));
 			
 		}
-		//ipView.setText(streaminglink);
+
 
 		/** TODO================================================================ */
 
@@ -251,19 +248,6 @@ public class VideoStreamingActivity extends Activity implements Callback,
 		    }
 		});
 
-//		mSurfaceView.setOnTouchListener(mSurfaceView);
-
-		
-//		mSurfaceView.setOnTouchListener(new OnTouchListener(){
-//
-//			@Override
-//			public boolean onTouch(View arg0, MotionEvent arg1) {
-//				// TODO Auto-generated method stub
-//				Log.i("mSurfaceView","touch screen");
-//				setContentView(new DrawingView(VideoStreamingActivity.this));
-//				return false;
-//			}
-//		});
 	}
 
 	public void initView() {
